@@ -19,7 +19,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use bytes::Bytes;
-use http::StatusCode;
+use http::{header::IF_NONE_MATCH, StatusCode};
 
 use super::core::GcsCore;
 use super::error::parse_error;
@@ -62,12 +62,13 @@ impl GcsWriter {
         }
     }
 
-    async fn write_oneshot(&self, bs: Bytes) -> Result<()> {
+    async fn write_oneshot(&self, bs: Bytes, if_none_match: Option<&str>) -> Result<()> {
         let mut req = self.core.gcs_insert_object_request(
             &percent_encode_path(&self.path),
             Some(bs.len()),
             self.op.content_type(),
             AsyncBody::Bytes(bs),
+            if_none_match,
         )?;
 
         self.core.sign(&mut req).await?;
@@ -135,7 +136,7 @@ impl oio::Write for GcsWriter {
                 if self.op.content_length().unwrap_or_default() == bs.len() as u64
                     && self.written == 0
                 {
-                    return self.write_oneshot(bs).await;
+                    return self.write_oneshot(bs, self.op.if_none_match()).await;
                 } else {
                     let location = self.initiate_upload().await?;
                     self.location = Some(location);

@@ -382,9 +382,9 @@ impl Accessor for GcsBackend {
     }
 
     async fn create_dir(&self, path: &str, _: OpCreate) -> Result<RpCreate> {
-        let mut req = self
-            .core
-            .gcs_insert_object_request(path, Some(0), None, AsyncBody::Empty)?;
+        let mut req =
+            self.core
+                .gcs_insert_object_request(path, Some(0), None, AsyncBody::Empty, None)?;
 
         self.core.sign(&mut req).await?;
 
@@ -399,7 +399,10 @@ impl Accessor for GcsBackend {
     }
 
     async fn read(&self, path: &str, args: OpRead) -> Result<(RpRead, Self::Reader)> {
-        let resp = self.core.gcs_get_object(path, args.range()).await?;
+        let resp = self
+            .core
+            .gcs_get_object(path, args.range(), args.if_none_match())
+            .await?;
 
         if resp.status().is_success() {
             let meta = parse_into_metadata(path, resp.headers())?;
