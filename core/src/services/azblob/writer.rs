@@ -31,11 +31,19 @@ pub struct AzblobWriter {
 
     op: OpWrite,
     path: String,
+    block_id: Option<String>,
+    buffer: oio::VectorCursor,
 }
 
 impl AzblobWriter {
     pub fn new(core: Arc<AzblobCore>, op: OpWrite, path: String) -> Self {
-        AzblobWriter { core, op, path }
+        AzblobWriter {
+            core,
+            op,
+            path,
+            block_id: None,
+            buffer: oio::VectorCursor::new(),
+        }
     }
 
     async fn write_oneshot(&self, size: u64, body: AsyncBody) -> Result<()> {

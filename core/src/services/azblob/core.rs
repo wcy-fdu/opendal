@@ -560,4 +560,15 @@ impl AzblobCore {
         self.sign(&mut req).await?;
         self.send(req).await
     }
+
+    pub fn azblob_put_block_list_request(
+        &self,
+        path: &str,
+        size: Option<u64>,
+        content_type: Option<&str>,
+        cache_control: Option<&str>,
+        body: AsyncBody,
+    ) -> Result<Request<AsyncBody>> {
+        todo!()
+    }
 }
